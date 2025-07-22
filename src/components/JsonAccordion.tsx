@@ -1,4 +1,3 @@
-// components/JsonAccordion.tsx
 import React, { useEffect, useState } from "react";
 import {
   Accordion,
@@ -9,6 +8,7 @@ import {
   CircularProgress,
   Paper,
   useTheme,
+  TextField,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import KeyValueDataGrid from "./KeyValueDataGrid";
@@ -18,6 +18,9 @@ interface JsonAccordionProps {
   data: any;
   search?: string;
   depth?: number;
+  editable?: boolean;
+  setUserJsonByPath?: (path: string, value: any) => void;
+  jsonPath?: string;
 }
 
 const isPrimitive = (val: any): boolean =>
@@ -43,6 +46,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
   data,
   search = "",
   depth = 0,
+  editable = false,
+  setUserJsonByPath,
+  jsonPath = ""
 }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
@@ -53,6 +59,22 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
   }, []);
 
   if (search && !matchesSearch({ [title]: data }, search)) return null;
+
+  // For primitive fields in object, allow inline editing
+  const handlePrimitiveEdit = (key: string, value: any) => {
+    if (setUserJsonByPath) {
+      const path = jsonPath ? `${jsonPath}.${key}` : key;
+      setUserJsonByPath(path, value);
+    }
+  };
+
+  // For primitive fields in array rows
+  const handleGridEdit = (rowIdx: number, field: string, value: any) => {
+    if (!setUserJsonByPath) return;
+    // Path in array
+    const path = jsonPath ? `${jsonPath}.${rowIdx}.${field}` : `${rowIdx}.${field}`;
+    setUserJsonByPath(path, value);
+  };
 
   const renderObject = (obj: any, keyPrefix = "") => {
     const primitives: Record<string, any> = {};
@@ -70,6 +92,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
               data={value}
               search={search}
               depth={depth + 1}
+              editable={editable}
+              setUserJsonByPath={setUserJsonByPath}
+              jsonPath={jsonPath ? `${jsonPath}.${key}` : key}
             />
           );
         }
@@ -80,7 +105,11 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
       <>
         {Object.keys(primitives).length > 0 && (
           <Box sx={{ width: "100%", mb: 2 }}>
-            <KeyValueDataGrid data={[primitives]} />
+            <KeyValueDataGrid
+              data={[primitives]}
+              editable={editable}
+              onPrimitiveEdit={handlePrimitiveEdit}
+            />
           </Box>
         )}
         {nested}
@@ -117,7 +146,11 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
       <>
         {filteredRows.length > 0 && (
           <Box sx={{ width: "100%", mb: 2 }}>
-            <KeyValueDataGrid data={filteredRows} />
+            <KeyValueDataGrid
+              data={filteredRows}
+              editable={editable}
+              onArrayEdit={handleGridEdit}
+            />
           </Box>
         )}
         {data.map((item, idx) => {
@@ -135,6 +168,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
                   data={value}
                   search={search}
                   depth={depth + 1}
+                  editable={editable}
+                  setUserJsonByPath={setUserJsonByPath}
+                  jsonPath={jsonPath ? `${jsonPath}.${idx}.${key}` : `${idx}.${key}`}
                 />
               ))}
             </Box>
@@ -145,10 +181,15 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
   } else if (typeof data === "object" && data !== null) {
     content = renderObject(data);
   } else {
-    content = (
-      <Typography variant="body2" color="text.secondary">
-        {String(data)}
-      </Typography>
+    content = editable && setUserJsonByPath ? (
+      <TextField
+        variant="standard"
+        value={String(data)}
+        onChange={(e) => setUserJsonByPath(jsonPath, e.target.value)}
+        sx={{ minWidth: 120 }}
+      />
+    ) : (
+      <Typography variant="body2" color="text.secondary">{String(data)}</Typography>
     );
   }
 
@@ -175,7 +216,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
               {title}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 3, py: 2 }}>{loading ? <CircularProgress /> : content}</AccordionDetails>
+          <AccordionDetails sx={{ px: 3, py: 2 }}>
+            {loading ? <CircularProgress /> : content}
+          </AccordionDetails>
         </Accordion>
       </Paper>
     </Box>
