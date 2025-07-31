@@ -1,3 +1,4 @@
+// components/JsonAccordion.tsx
 import React, { useEffect, useState } from "react";
 import {
   Accordion,
@@ -60,7 +61,6 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
 
   if (search && !matchesSearch({ [title]: data }, search)) return null;
 
-  // For primitive fields in object, allow inline editing
   const handlePrimitiveEdit = (key: string, value: any) => {
     if (setUserJsonByPath) {
       const path = jsonPath ? `${jsonPath}.${key}` : key;
@@ -68,10 +68,8 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
     }
   };
 
-  // For primitive fields in array rows
   const handleGridEdit = (rowIdx: number, field: string, value: any) => {
     if (!setUserJsonByPath) return;
-    // Path in array
     const path = jsonPath ? `${jsonPath}.${rowIdx}.${field}` : `${rowIdx}.${field}`;
     setUserJsonByPath(path, value);
   };
@@ -195,10 +193,7 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
 
   return (
     <Box sx={{ my: 2, pl: depth * 2 }}>
-      <Paper
-        elevation={depth === 0 ? 3 : 1}
-        sx={{ borderRadius: 2, backgroundColor: theme.palette.background.paper }}
-      >
+      <Paper elevation={depth === 0 ? 3 : 1} sx={{ borderRadius: 2 }}>
         <Accordion defaultExpanded disableGutters>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}

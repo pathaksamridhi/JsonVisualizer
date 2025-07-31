@@ -1,9 +1,11 @@
-import { Container, Typography, Box, Paper, TextField } from "@mui/material";
+// App.tsx
+import { Container, Typography, Paper, TextField } from "@mui/material";
+import Grid from "@mui/material/Grid"; // <-- Add this line explicitly
 import JsonAccordion from "./components/JsonAccordion";
 import { data as defaultData } from "./data/nestedData";
 import { useState } from "react";
 
-// Helper for immutable deep set by path (dot notation with array, e.g. "orders.1.items.0.price")
+
 function setValueAtPath(obj: any, path: string, value: any): any {
   if (!path) return value;
   const parts = path.split(".");
@@ -12,7 +14,6 @@ function setValueAtPath(obj: any, path: string, value: any): any {
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i];
     if (Array.isArray(curr)) {
-      // numeric
       curr[p as any as number] = Array.isArray(curr[p as any as number]) ? [...curr[p as any as number]] : { ...curr[p as any as number] };
       curr = curr[p as any as number];
     } else {
@@ -47,48 +48,55 @@ function App() {
     }
   };
 
-  // Handler for deep editing
   const setUserJsonByPath = (path: string, value: any) => {
-    setUserJson((prev: any) => setValueAtPath(prev, path, value));
-    setJsonInput((_) => JSON.stringify(setValueAtPath(userJson, path, value), null, 2));
+    setUserJson((prev: any) => {
+      const updated = setValueAtPath(prev, path, value);
+      setJsonInput(JSON.stringify(updated, null, 2));
+      return updated;
+    });
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 6 }}>
-      <Paper elevation={3} sx={{ borderRadius: 3, p: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            JSON Visualizer
-          </Typography>
-          {/* JSON Input Field */}
-          <TextField
-            fullWidth
-            multiline
-            minRows={4}
-            label="Paste or edit JSON here..."
-            value={jsonInput}
-            onChange={onInputChange}
-            error={!!jsonError}
-            helperText={jsonError || "Enter valid JSON root object/array"}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Search keys or values..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            variant="outlined"
-          />
-        </Box>
-        <JsonAccordion
-          title="Test"
-          data={userJson}
-          search={search}
-          editable={true}
-          setUserJsonByPath={setUserJsonByPath}
-          jsonPath=""
-        />
-      </Paper>
+    <Container maxWidth="lg" sx={{ py: 6 }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        JSON Visualizer
+      </Typography>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={20}
+              label="Edit Raw JSON"
+              value={jsonInput}
+              onChange={onInputChange}
+              error={!!jsonError}
+              helperText={jsonError || "Valid JSON required"}
+            />
+            <TextField
+              fullWidth
+              label="Search Keys or Values"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              variant="outlined"
+              sx={{ mt: 2 }}
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+            <JsonAccordion
+              title="Test"
+              data={userJson}
+              search={search}
+              editable={true}
+              setUserJsonByPath={setUserJsonByPath}
+              jsonPath=""
+            />
+          </Paper>
+        </Grid>
+      </Grid>
     </Container>
   );
 }
