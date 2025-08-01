@@ -26,16 +26,21 @@ interface JsonAccordionProps {
 const isPrimitive = (val: any): boolean =>
   typeof val !== "object" || val === null;
 
-const matchesSearch = (value: any, search: string): boolean => {
+export const matchesSearch = (value: any, search: string): boolean => {
   if (!search) return true;
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value).toLowerCase().includes(search.toLowerCase());
   }
   if (Array.isArray(value)) return value.some((v) => matchesSearch(v, search));
   if (typeof value === "object" && value !== null) {
     return Object.entries(value).some(
       ([k, v]) =>
-        k.toLowerCase().includes(search.toLowerCase()) || matchesSearch(v, search)
+        k.toLowerCase().includes(search.toLowerCase()) ||
+        matchesSearch(v, search)
     );
   }
   return false;
@@ -48,7 +53,7 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
   depth = 0,
   editable = false,
   setUserJsonByPath,
-  jsonPath = ""
+  jsonPath = "",
 }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
@@ -69,7 +74,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
 
   const handleGridEdit = (rowIdx: number, field: string, value: any) => {
     if (!setUserJsonByPath) return;
-    const path = jsonPath ? `${jsonPath}.${rowIdx}.${field}` : `${rowIdx}.${field}`;
+    const path = jsonPath
+      ? `${jsonPath}.${rowIdx}.${field}`
+      : `${rowIdx}.${field}`;
     setUserJsonByPath(path, value);
   };
 
@@ -186,7 +193,9 @@ const JsonAccordion: React.FC<JsonAccordionProps> = ({
         sx={{ minWidth: 120 }}
       />
     ) : (
-      <Typography variant="body2" color="text.secondary">{String(data)}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {String(data)}
+      </Typography>
     );
   }
 

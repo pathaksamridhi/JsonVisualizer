@@ -1,9 +1,9 @@
 import { Container, Typography, Box, Paper, TextField } from "@mui/material";
-import JsonAccordion from "./components/JsonAccordion";
+import JsonAccordion, { matchesSearch } from "./components/JsonAccordion";
 import { data as defaultData } from "./data/nestedData";
 import { useState } from "react";
 
-// Helper to deep set value at JSON path
+// Deeply sets a value at a given JSON path
 function setValueAtPath(obj: any, path: string, value: any): any {
   if (!path) return value;
   const parts = path.split(".");
@@ -65,7 +65,6 @@ function App() {
           JSON Visualizer
         </Typography>
 
-        {/* 🔍 Search at Top */}
         <TextField
           fullWidth
           label="Search keys or values..."
@@ -75,14 +74,7 @@ function App() {
           sx={{ mb: 4 }}
         />
 
-        <Box
-          sx={{
-            display: "flex",
-            gap: 3,
-            alignItems: "flex-start",
-          }}
-        >
-          {/* Left: Raw JSON Editor */}
+        <Box sx={{ display: "flex", gap: 3 }}>
           <Box sx={{ flex: 1 }}>
             <TextField
               fullWidth
@@ -96,15 +88,20 @@ function App() {
             />
           </Box>
 
-          {/* Right: Visual JSON */}
-          <Box sx={{ flex: 1, maxWidth: "100%" }}>
-            <JsonAccordion
-              title="Test"
-              data={userJson}
-              search={search}
-              editable={true}
-              setUserJsonByPath={setUserJsonByPath}
-            />
+          <Box sx={{ flex: 1 }}>
+            {matchesSearch({ Test: userJson }, search) ? (
+              <JsonAccordion
+                title="Test"
+                data={userJson}
+                search={search}
+                editable
+                setUserJsonByPath={setUserJsonByPath}
+              />
+            ) : (
+              <Typography variant="body1" color="text.secondary">
+                No results match your search.
+              </Typography>
+            )}
           </Box>
         </Box>
       </Paper>
